@@ -1,4 +1,4 @@
-import csv, math
+import csv, math, statistics
 
 fast_responses = []
 delayed_responses = []
@@ -27,8 +27,11 @@ delayed_mean = sum(delayed_responses) / len(delayed_responses)
 sorted_fast_endpoints = sorted(fast_responses)
 sorted_delayed_endpoints = sorted(delayed_responses)
 
-fast_median = round((sorted_fast_endpoints[14] + sorted_fast_endpoints[15]) / 2, 2)
-delayed_median = round((sorted_delayed_endpoints[14] + sorted_delayed_endpoints[15]) / 2, 2)
+# fast_median = round((sorted_fast_endpoints[14] + sorted_fast_endpoints[15]) / 2, 2)
+# delayed_median = round((sorted_delayed_endpoints[14] + sorted_delayed_endpoints[15]) / 2, 2)
+
+fast_median = statistics.median(sorted_fast_endpoints)
+delayed_median = statistics.median(sorted_delayed_endpoints)
 
 # print(f"Fast Endpoints median: {fast_median}")
 # print(f"Delayed Endpoints median: {delayed_median}")
@@ -62,19 +65,27 @@ delayed_std = math.sqrt(delayed_variance)
 # print(f"Fast Endpoints Standard Deviation: {fast_std:.2f}")
 # print(f"Delayed Endpoints Standard Deviation: {delayed_std:.2f}")
 
-fast_mid_idx = len(fast_responses) // 2
-delayed_mid_idx = len(delayed_responses) // 2
+# fast_mid_idx = len(fast_responses) // 2
+# delayed_mid_idx = len(delayed_responses) // 2
 
-fast_first_half = sorted_fast_endpoints[:fast_mid_idx]
-fast_second_half = sorted_fast_endpoints[fast_mid_idx:]
-delayed_first_half = sorted_delayed_endpoints[:delayed_mid_idx]
-delayed_second_half = sorted_delayed_endpoints[delayed_mid_idx:]
+# fast_first_half = sorted_fast_endpoints[:fast_mid_idx]
+# fast_second_half = sorted_fast_endpoints[fast_mid_idx:]
+# delayed_first_half = sorted_delayed_endpoints[:delayed_mid_idx]
+# delayed_second_half = sorted_delayed_endpoints[delayed_mid_idx:]
 
-fast_q1 = fast_first_half[7]
-fast_q3 = fast_second_half[7]
+# fast_q1 = fast_first_half[7]
+# fast_q3 = fast_second_half[7]
 
-delayed_q1 = delayed_first_half[7]
-delayed_q3 = delayed_second_half[7]
+fast_quartiles = statistics.quantiles(fast_responses, n=4, method='inclusive')
+fast_q1 = fast_quartiles[0]
+fast_q3 = fast_quartiles[2]
+
+# delayed_q1 = delayed_first_half[7]
+# delayed_q3 = delayed_second_half[7]
+
+delayed_quartiles = statistics.quantiles(delayed_responses, n=4, method='inclusive')
+delayed_q1 = delayed_quartiles[0]
+delayed_q3 = delayed_quartiles[2]
 
 fast_iqr = fast_q3 - fast_q1
 delayed_iqr = delayed_q3 - delayed_q1
@@ -109,5 +120,58 @@ delayed_outliers = [
 fast_qd = fast_iqr / 2
 delayed_qd = delayed_iqr / 2
 
-print(f"Fast Endpoints Quantile Deviation: {fast_qd:.2f}ms")
-print(f"Delayed Endpoints Quantile Deviation: {delayed_qd:.2f}ms")
+# print(f"Fast Endpoints Quartile Deviation: {fast_qd:.2f}ms")
+# print(f"Delayed Endpoints Quartile Deviation: {delayed_qd:.2f}ms")
+
+fast_skewness_sum = sum(
+    ((x - fast_mean) / fast_std) ** 3
+    for x in fast_responses
+)
+
+delayed_skewness_sum = sum(
+    ((x - delayed_mean) / delayed_std) ** 3
+    for x in delayed_responses
+)
+
+fast_n = len(fast_responses)
+delayed_n = len(delayed_responses)
+
+fast_skewness = (fast_n / ((fast_n - 1) * (fast_n - 2))) * fast_skewness_sum
+delayed_skewness = (delayed_n / ((delayed_n - 1) * (delayed_n - 2))) * delayed_skewness_sum
+
+# print(f"Fast Endpoints Skewness: {fast_skewness:.2f}")
+# print(f"Delayed Endpoints Skewness: {delayed_skewness:.2f}")
+
+fast_ub_outliers = [
+    x for x in fast_responses
+    if x > fast_ub
+    ]
+delayed_ub_outliers = [
+    x for x in delayed_responses
+    if x > delayed_ub
+    ]
+
+std_threshold = (fast_std + delayed_std) / 2
+outlier_threshold = math.ceil((len(fast_ub_outliers) + len(delayed_ub_outliers)) / 2)
+
+fast_status = (
+    "Unstable"
+    if fast_std > std_threshold or len(fast_ub_outliers) > outlier_threshold
+    else "Stable"
+)
+
+delayed_status = (
+    "Unstable"
+    if delayed_std > std_threshold or len(delayed_ub_outliers) > outlier_threshold
+    else "Stable"
+)
+
+# print(f"Fast Endpoint Status: {fast_status}")
+# print(f"Delayed Endpoint Status: {delayed_status}")
+
+fast_outlier_percentage = (len(fast_outliers) / len(fast_responses)) * 100
+delayed_outlier_percentage = (len(delayed_outliers) / len(delayed_responses)) * 100
+
+# print(f"Fast Outlier Percentage: {fast_outlier_percentage:.2f}%")
+# print(f"Delayed Outlier Percentage: {delayed_outlier_percentage:.2f}%")
+

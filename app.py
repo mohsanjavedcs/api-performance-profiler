@@ -1,5 +1,5 @@
 from flask import Flask # type: ignore
-import time
+import time, random
 
 app = Flask(__name__)
 
@@ -13,7 +13,9 @@ def fast():
 
 @app.route("/delayed")
 def delayed():
-    time.sleep(0.2)
+    if random.random() < 0.5:
+        sleep_duration = random.uniform(0.01, 0.3)
+        time.sleep(sleep_duration)
     return "<h1>The delayed endpoint is working.</h1>"
 
 if __name__ == "__main__":

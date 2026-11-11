@@ -7,7 +7,7 @@ delayed = "http://127.0.0.1:5000/delayed"
 measurements = []
 
 def store_measurements(url):
-    for i in range(30):
+    for i in range(1000):
     
         start_time = time.perf_counter()
         response = requests.get(url, timeout=5)
